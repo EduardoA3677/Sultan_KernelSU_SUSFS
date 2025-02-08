@@ -54,6 +54,8 @@ jobs:
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
+          git config user.email "ealvarado26100@gmail.com"
+          git config user.name "Eduardo"
           git revert --no-edit d2f39c14636a811c5e17e6e555bf7ff684247a9b
 
           echo "Adding KernelSU..."
