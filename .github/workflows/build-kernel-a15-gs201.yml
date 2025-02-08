@@ -21,11 +21,11 @@ jobs:
 
       - name: Installing dependencies
         run: |
-          sudo apt install -y gcc-aarch64-linux-gnu
+          sudo apt install -y git gcc-aarch64-linux-gnu
 
       - name: Set CONFIG Environment Variable
         run: |
-          CONFIG="gs"
+          CONFIG="RadioactiveKernel_Pantah"
           
           # Set CONFIG as an environment variable for future steps
           echo "CONFIG=$CONFIG" >> $GITHUB_ENV
@@ -48,13 +48,14 @@ jobs:
           git clone https://github.com/TheWildJames/AnyKernel3.git -b "$ANYKERNEL_BRANCH"
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
           git clone https://github.com/TheWildJames/kernel_patches.git
-          git clone https://github.com/engstk/gs.git
+          git clone https://github.com/acuicultor/RadioactiveKernel_Pantah.git
       
       - name: Add KernelSU
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
-          
+          git revert --no-edit d2f39c14636a811c5e17e6e555bf7ff684247a9b
+
           echo "Adding KernelSU..."
           curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -
 
@@ -132,29 +133,29 @@ jobs:
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
           
-          echo "Adding configuration settings to blu_spark_gs201_defconfig..."
+          echo "Adding configuration settings to radioactive_defconfig..."
           
           # Add SUSFS configuration settings
-          echo "CONFIG_KSU=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
-          echo "CONFIG_KSU_SUSFS=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
-          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
-          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
-          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
-          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
-          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
-          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
-          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
+          echo "CONFIG_KSU=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/radioactive_defconfig
           
           # Add additional tmpfs config setting
-          echo "CONFIG_TMPFS_XATTR=y" >> ./arch/arm64/configs/blu_spark_gs201_defconfig
+          echo "CONFIG_TMPFS_XATTR=y" >> ./arch/arm64/configs/radioactive_defconfig
 
       - name: Run sed and perl Commands
         run: |
@@ -162,7 +163,7 @@ jobs:
           cd "$CONFIG"
           
           echo "Running sed commands..."
-          sed -i 's/CONFIG_LOCALVERSION="-BluSpark"/CONFIG_LOCALVERSION="-Sultan-Wild+"/' ./arch/arm64/configs/blu_spark_gs201_defconfig
+          sed -i 's/CONFIG_LOCALVERSION="-Radioctive"/CONFIG_LOCALVERSION="-Sultan-Wild+"/' ./arch/arm64/configs/radioactive_defconfig
 
       - name: Build the Kernel
         run: |
@@ -170,7 +171,7 @@ jobs:
           cd "$CONFIG"
           
           echo "Building the kernel..."
-          make blu_spark_gs201_defconfig -j$(nproc --all)
+          make radioactive_defconfig -j$(nproc --all)
           make -j$(nproc --all)
 
       - name: Copy Images
@@ -189,7 +190,7 @@ jobs:
           cd ./AnyKernel3
 
           # Zip the files in the AnyKernel3 directory with a new naming convention
-          ZIP_NAME="A15_BluSpark_KernelSU_SUSFS_GS201.zip"
+          ZIP_NAME="A15_Radioctive_KernelSU_SUSFS_GS201.zip"
           echo "Creating zip file $ZIP_NAME..."
           zip -r "../$ZIP_NAME" ./*
           
