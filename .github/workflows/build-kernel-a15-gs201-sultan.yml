@@ -1,10 +1,10 @@
-name: Build A15 Zuma Pro Kernel
+name: Build A15 GS201 Sultan Kernel
 
 on:
   workflow_call:  # This allows this workflow to be called from another workflow
   
 jobs:
-  build-kernel-a15-zumapro-kernelsu-susfs:
+  build-kernel-a15-gs201-kernelsu-susfs:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,11 +21,12 @@ jobs:
 
       - name: Installing dependencies
         run: |
-          sudo apt install -y gcc-aarch64-linux-gnu
+          sudo apt install -y git wget gcc-aarch64-linux-gnu llvm clang lld
+          sudo apt-get install -y llvm-19 llvm-19-dev libllvm19 llvm-19-tools clang-19 libclang-common-19-dev libclang-19-dev libmlir-19 libmlir-19-dev
 
       - name: Set CONFIG Environment Variable
         run: |
-          CONFIG="android_kernel_google_zumapro"
+          CONFIG="RadioactiveKernel_Pantah"
           
           # Set CONFIG as an environment variable for future steps
           echo "CONFIG=$CONFIG" >> $GITHUB_ENV
@@ -37,8 +38,8 @@ jobs:
           echo "Cloning AnyKernel3 and other dependencies..."
     
           # Define the branch names using the matrix values
-          ANYKERNEL_BRANCH="15.0.0-sultan-zumapro"
-          SUSFS_BRANCH="gki-android14-6.1"
+          ANYKERNEL_BRANCH="15.0.0-sultan-gs201"
+          SUSFS_BRANCH="gki-android13-5.10"
 
           # Debug print the branches
           echo "Using branch for AnyKernel3: $ANYKERNEL_BRANCH"
@@ -47,14 +48,48 @@ jobs:
           # Clone repositories using the branch names
           git clone https://github.com/TheWildJames/AnyKernel3.git -b "$ANYKERNEL_BRANCH"
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
-          git clone https://github.com/TheWildJames/kernel_patches.git
-          git clone https://github.com/kerneltoast/android_kernel_google_zumapro
-      
+          git clone https://github.com/EduardoA3677/kernel_patches.git
+          git clone https://github.com/acuicultor/RadioactiveKernel_Pantah.git
+          mkdir -p $CONFIG/clang
+          CLANGDIR="$CONFIG/clang"
+          echo "CLANGDIR=$CLANGDIR" >> $GITHUB_ENV
+          wget -O clang-r530567.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/llvm-r530567/clang-r530567.tar.gz
+          if [ $? -ne 0 ]; then echo "Error: Fallo al descargar Clang"; exit 1; fi
+          tar -xzf clang-r530567.tar.gz -C $CLANGDIR
+          ls -la $CLANGDIR
+          PATH=$CLANGDIR/bin:$CLANGDIR/lib:$PATH
+          echo "PATH=$PATH" >> $GITHUB_ENV
+          CC=$CLANGDIR/bin/clang
+          echo "CC=$CC" >> $GITHUB_ENV
+          LD=$CLANGDIR/bin/ld.lld
+          echo "LD=$LD" >> $GITHUB_ENV
+          AR=$CLANGDIR/bin/llvm-ar
+          echo "AR=$AR" >> $GITHUB_ENV
+          NM=$CLANGDIR/bin/llvm-nm
+          echo "NM=$NM" >> $GITHUB_ENV
+          OBJCOPY=$CLANGDIR/bin/llvm-objcopy
+          echo "OBJCOPY=$OBJCOPY" >> $GITHUB_ENV
+          OBJDUMP=$CLANGDIR/bin/llvm-objdump
+          echo "OBJDUMP=$OBJDUMP" >> $GITHUB_ENV
+          READELF=$CLANGDIR/bin/llvm-readelf
+          echo "READELF=$READELF" >> $GITHUB_ENV
+          STRIP=$CLANGDIR/bin/llvm-strip
+          echo "STRIP=$STRIP" >> $GITHUB_ENV
+          LLVM=1
+          echo "LLVM=$LLVM" >> $GITHUB_ENV
+          ARCH=arm64
+          echo "ARCH=$ARCH" >> $GITHUB_ENV
+          SUBARCH=arm64
+          echo "SUBARCH=$SUBARCH" >> $GITHUB_ENV
+
       - name: Add KernelSU
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
-          
+          git config user.email "ealvarado26100@gmail.com"
+          git config user.name "Eduardo"
+          git revert --no-edit d2f39c14636a811c5e17e6e555bf7ff684247a9b
+
           echo "Adding KernelSU..."
           curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -
 
@@ -67,7 +102,7 @@ jobs:
           
           # Copy SUSFS patches
           cp ../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
-          cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android14-6.1.patch ./
+          cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android13-5.10.patch ./
           cp ../susfs4ksu/kernel_patches/fs/* ./fs/
           cp ../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
 
@@ -78,7 +113,7 @@ jobs:
           
           # Change to common directory and apply SUSFS patch
           cd ..
-          patch -p1 < 50_add_susfs_in_gki-android14-6.1.patch || true
+          patch -p1 < 50_add_susfs_in_gki-android13-5.10.patch || true
           
       - name: Apply Next-SUSFS Patches
         run: |
@@ -132,29 +167,29 @@ jobs:
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
           
-          echo "Adding configuration settings to zumapro_defconfig..."
+          echo "Adding configuration settings to radioactive_defconfig..."
           
           # Add SUSFS configuration settings
-          echo "CONFIG_KSU=y" >> ./arch/arm64/configs/zumapro_defconfig
-          echo "CONFIG_KSU_SUSFS=y" >> ./arch/arm64/configs/zumapro_defconfig
-          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./arch/arm64/configs/zumapro_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./arch/arm64/configs/zumapro_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./arch/arm64/configs/zumapro_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./arch/arm64/configs/zumapro_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./arch/arm64/configs/zumapro_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./arch/arm64/configs/zumapro_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> ./arch/arm64/configs/zumapro_defconfig
-          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ./arch/arm64/configs/zumapro_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ./arch/arm64/configs/zumapro_defconfig
-          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./arch/arm64/configs/zumapro_defconfig
-          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ./arch/arm64/configs/zumapro_defconfig
-          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./arch/arm64/configs/zumapro_defconfig
-          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./arch/arm64/configs/zumapro_defconfig
-          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./arch/arm64/configs/zumapro_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/zumapro_defconfig
+          echo "CONFIG_KSU=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./arch/arm64/configs/radioactive_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/radioactive_defconfig
           
           # Add additional tmpfs config setting
-          echo "CONFIG_TMPFS_XATTR=y" >> ./arch/arm64/configs/zumapro_defconfig
+          echo "CONFIG_TMPFS_XATTR=y" >> ./arch/arm64/configs/radioactive_defconfig
 
       - name: Run sed and perl Commands
         run: |
@@ -162,7 +197,7 @@ jobs:
           cd "$CONFIG"
           
           echo "Running sed commands..."
-          sed -i 's/CONFIG_LOCALVERSION="-Sultan"/CONFIG_LOCALVERSION="-Sultan-Wild+"/' ./arch/arm64/configs/zumapro_defconfig
+          sed -i 's/CONFIG_LOCALVERSION="-Radioctive"/CONFIG_LOCALVERSION="-Sultan-Wild+"/' ./arch/arm64/configs/radioactive_defconfig
 
       - name: Build the Kernel
         run: |
@@ -170,8 +205,8 @@ jobs:
           cd "$CONFIG"
           
           echo "Building the kernel..."
-          make zumapro_defconfig -j$(nproc --all)
-          make -j$(nproc --all)
+          make CC=clang LD=ld.lld ARCH=arm64 radioactive_defconfig -j$(nproc --all)
+          make CC=clang LD=ld.lld ARCH=arm64 -j$(nproc --all)
 
       - name: Copy Images
         run: |
@@ -180,7 +215,8 @@ jobs:
 
           echo "Copying Image.lz4 and concatenating DTB files..."
           cp ./out/arch/arm64/boot/Image.lz4 ../AnyKernel3/Image.lz4
-          cat ./out/google-modules/soc/gs/arch/arm64/boot/dts/google/*.dtb > ../AnyKernel3/dtb
+          cat ./out/arch/arm64/boot/dts/google/*.dtb > ../AnyKernel3/dtb
+          cp ./out/arch/arm64/boot/dts/google/dtbo.img ../AnyKernel3/dtbo.img
 
       - name: Create ZIP Files for Different Formats
         run: |
@@ -188,13 +224,13 @@ jobs:
           cd ./AnyKernel3
 
           # Zip the files in the AnyKernel3 directory with a new naming convention
-          ZIP_NAME="A15_Sultan_KernelSU_SUSFS_ZumaPro.zip"
+          ZIP_NAME="A15_Radioctive_KernelSU_SUSFS_GS201.zip"
           echo "Creating zip file $ZIP_NAME..."
           zip -r "../$ZIP_NAME" ./*
           
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: kernel-zumapro
+          name: kernel-gs201
           path: |
             *.zip
