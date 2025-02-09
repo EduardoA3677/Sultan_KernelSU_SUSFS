@@ -42,13 +42,13 @@ jobs:
       - name: Set environment variables for Clang 19
         run: |
           echo "Setting environment variables for Clang 19..."
-          echo "CC=clang-19" >> $GITHUB_ENV
-          echo "CXX=clang++-19" >> $GITHUB_ENV
-          echo "LD=ld.lld-19" >> $GITHUB_ENV
-          echo "AR=llvm-ar-19" >> $GITHUB_ENV
-          echo "NM=llvm-nm-19" >> $GITHUB_ENV
-          echo "OBJDUMP=llvm-objdump-19" >> $GITHUB_ENV
-          echo "OBJCOPY=llvm-objcopy-19" >> $GITHUB_ENV
+          echo "ARCH=arm64" >> $GITHUB_ENV
+          echo "CC=clang >> $GITHUB_ENV
+          echo "LD=ld.lld >> $GITHUB_ENV
+          echo "AR=llvm-ar" >> $GITHUB_ENV
+          echo "NM=llvm-nm" >> $GITHUB_ENV
+          echo "OBJDUMP=llvm-objdump" >> $GITHUB_ENV
+          echo "OBJCOPY=llvm-objcopy" >> $GITHUB_ENV
           echo "CROSS_COMPILE=aarch64-linux-gnu-" >> $GITHUB_ENV
           echo "CLANG_TRIPLE=aarch64-linux-gnu-" >> $GITHUB_ENV
           echo "LLVM=1" >> $GITHUB_ENV
@@ -78,10 +78,10 @@ jobs:
           echo "Building the kernel..."
           make radioactive_defconfig -j$(nproc --all)
           make -j$(nproc --all) \
-            CC=clang-19 \
-            LD=ld.lld-19 \
-            CROSS_COMPILE=aarch64-linux-gnu- \
-            CLANG_TRIPLE=aarch64-linux-gnu-
+            CC=clang \
+            LD=ld.lld \
+            LLVM=1 \
+            LLVM_IAS=1 \
 
       - name: Copy Images
         run: |
