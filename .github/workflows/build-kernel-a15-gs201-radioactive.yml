@@ -53,9 +53,9 @@ jobs:
           mkdir -p $CONFIG/clang
           CLANGDIR="$CONFIG/clang"
           echo "CLANGDIR=$CLANGDIR" >> $GITHUB_ENV
-          wget -O clang-r530567.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/llvm-r530567/clang-r530567.tar.gz
+          wget -O LLVM-19.1.7-Linux-X64.tar.xz https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz
           if [ $? -ne 0 ]; then echo "Error: Fallo al descargar Clang"; exit 1; fi
-          tar -xzf clang-r530567.tar.gz -C $CLANGDIR
+          tar -xJf LLVM-19.1.7-Linux-X64.tar.xz -C $CLANGDIR
           ls -la $CLANGDIR
           PATH=$CLANGDIR/bin:$CLANGDIR/lib:$PATH
           echo "PATH=$PATH" >> $GITHUB_ENV
@@ -65,6 +65,8 @@ jobs:
           echo "LD=$LD" >> $GITHUB_ENV
           AR=$CLANGDIR/bin/llvm-ar
           echo "AR=$AR" >> $GITHUB_ENV
+          AS=$CLANGDIR/bin/llvm-as
+          echo "AS=$AS" >> $GITHUB_ENV
           NM=$CLANGDIR/bin/llvm-nm
           echo "NM=$NM" >> $GITHUB_ENV
           OBJCOPY=$CLANGDIR/bin/llvm-objcopy
@@ -81,6 +83,10 @@ jobs:
           echo "ARCH=$ARCH" >> $GITHUB_ENV
           SUBARCH=arm64
           echo "SUBARCH=$SUBARCH" >> $GITHUB_ENV
+          CROSS_COMPILE=aarch64-linux-gnu-
+          echo "CROSS_COMPILE=$CROSS_COMPILE" >> $GITHUB_ENV
+          CLANG_TRIPLE=aarch64-linux-gnu-
+          echo "CLANG_TRIPLE=$CLANG_TRIPLE" >> $GITHUB_ENV
 
       - name: Add KernelSU
         run: |
@@ -205,8 +211,32 @@ jobs:
           cd "$CONFIG"
           
           echo "Building the kernel..."
-          make CC=clang LD=ld.lld ARCH=arm64 radioactive_defconfig -j$(nproc --all)
-          make CC=clang LD=ld.lld ARCH=arm64 -j$(nproc --all)
+          make -j$(nproc --all) \
+                ARCH=arm64 \
+                SUBARCH=arm64 \
+                CC=clang \
+                LD=ld.lld \
+                CROSS_COMPILE=aarch64-linux-gnu- \
+                CLANG_TRIPLE=aarch64-linux-gnu- \
+                V=1 \
+                radioactive_defconfig
+
+          make -j$(nproc --all) \
+               ARCH=arm64 \
+               SUBARCH=arm64 \
+               CC=clang \
+               LD=ld.lld \
+               CROSS_COMPILE=aarch64-linux-gnu- \
+               CLANG_TRIPLE=aarch64-linux-gnu- \
+               LLVM=1 \
+               LLVM_IAS=1 \
+               AS=llvm-as \
+               AR=llvm-ar \
+               NM=llvm-nm \
+               OBJCOPY=llvm-objcopy \
+               OBJDUMP=llvm-objdump \
+               STRIP=llvm-strip \
+               V=1 \
 
       - name: Copy Images
         run: |
