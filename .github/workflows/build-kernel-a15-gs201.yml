@@ -44,11 +44,6 @@ jobs:
           echo "Setting environment variables for Clang 19..."
           echo "ARCH=arm64" >> $GITHUB_ENV
           echo "CC=clang >> $GITHUB_ENV
-          echo "LD=ld.lld >> $GITHUB_ENV
-          echo "AR=llvm-ar" >> $GITHUB_ENV
-          echo "NM=llvm-nm" >> $GITHUB_ENV
-          echo "OBJDUMP=llvm-objdump" >> $GITHUB_ENV
-          echo "OBJCOPY=llvm-objcopy" >> $GITHUB_ENV
           echo "CROSS_COMPILE=aarch64-linux-gnu-" >> $GITHUB_ENV
           echo "CLANG_TRIPLE=aarch64-linux-gnu-" >> $GITHUB_ENV
           echo "LLVM=1" >> $GITHUB_ENV
@@ -79,7 +74,6 @@ jobs:
           make radioactive_defconfig -j$(nproc --all)
           make -j$(nproc --all) \
             CC=clang \
-            LD=ld.lld \
             LLVM=1 \
             LLVM_IAS=1 \
 
