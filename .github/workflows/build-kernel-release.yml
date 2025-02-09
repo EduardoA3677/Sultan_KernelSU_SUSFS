@@ -1,235 +1,159 @@
+name: Build and Release GKI Kernels
 
-name: Build A15 GS201 Kernel
-
-on:
-  workflow_call:  # This allows this workflow to be called from another workflow
+permissions:
+  contents: write  # Allow writing to repository contents (for pushing tags)
+  actions: write   # Allows triggering actions
   
+on:
+  workflow_dispatch:
+    inputs:
+      build_gs201:
+        description: 'Do you want to build the GS201 kernel?'
+        required: true
+        type: boolean
+        default: true
+      build_zuma:
+        description: 'Do you want to build the Zuma kernel?'
+        required: true
+        type: boolean
+        default: true
+      build_zumapro:
+        description: 'Do you want to build the Zuma Pro kernel?'
+        required: true
+        type: boolean
+        default: true
+      make_release:
+        description: 'Do you want to create a release?'
+        required: true
+        type: boolean
+        default: false
+
 jobs:
-  build-kernel-a15-gs201-kernelsu-susfs:
-    runs-on: ubuntu-latest
+  build-kernel-a15-gs201:
+    if: ${{ inputs.build_gs201 }}
+    uses: ./.github/workflows/build-kernel-a15-gs201.yml
+    secrets: inherit
+  build-kernel-a15-zuma:
+    if: ${{ inputs.build_zuma }}
+    uses: ./.github/workflows/build-kernel-a15-zuma.yml
+    secrets: inherit
+  build-kernel-a15-zumapro:
+    if: ${{ inputs.build_zumapro }}
+    uses: ./.github/workflows/build-kernel-a15-zumapro.yml
+    secrets: inherit
 
-    steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@master
-        with:
-          root-reserve-mb: 8192
-          temp-reserve-mb: 2048
-          swap-size-mb: 8192
-          remove-dotnet: 'true'
-          remove-android: 'true'
-          remove-haskell: 'true'
-          remove-codeql: 'true'
+  trigger-release:
+runs-on: ubuntu-latest
+    needs:
+        - build-kernel-a15-gs201
+        - build-kernel-a15-zuma
+        - build-kernel-a15-zumapro
+    if: ${{ inputs.make_release }}
+    env:
+      REPO_OWNER: techgenius1
+      REPO_NAME: Sultan_KernelSU_SUSFS
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_NAME: "Sultan Kernels With KernelSU Next & SUSFS v1.5.3"
+      RELEASE_NOTES: |
+        This release contains KernelSU Next and SUSFS v1.5.3
+        
+        Module: 
+        -> https://github.com/sidex15/ksu_module_susfs
+        
+        Official Manager:
+        -> https://github.com/tiann/KernelSU
+        
+        Non-Official Managers:
+        -> https://github.com/rifsxd/KernelSU-Next
+        -> https://github.com/backslashxx/KernelSU
+        -> https://github.com/rsuntk/KernelSU
+        -> https://github.com/5ec1cff/KernelSU
+        -> https://github.com/silvzr/KernelSU
+        -> https://github.com/sidex15/KernelSU
+        
+        Features:
+        [+] KernelSU-Next
+        [+] SUSFS v1.5.3
+        [+] Wireguard Support
+        [+] Maphide LineageOS Detections
+        [+] Futile Maphide for jit-zygote-cache Detections
+        [+] Magic Mount Support
 
-      - name: Installing dependencies
-        run: |
-          sudo apt install -y git wget gcc-aarch64-linux-gnu llvm clang lld
-          sudo apt-get install -y llvm-19 llvm-19-dev libllvm19 llvm-19-tools clang-19 libclang-common-19-dev libclang-19-dev libmlir-19 libmlir-19-dev
-          
-      - name: Set CONFIG Environment Variable
-        run: |
-          CONFIG="RadioactiveKernel_Pantah"
-          
-          # Set CONFIG as an environment variable for future steps
-          echo "CONFIG=$CONFIG" >> $GITHUB_ENV
-          
-          echo "CONFIG set to: $CONFIG"
+        Special thanks to the following people for their contributions!
+        This helps me alot! <3
 
-      - name: Clone AnyKernel3 and Other Dependencies
-        run: |
-          echo "Cloning AnyKernel3 and other dependencies..."
+        TheWildJames - Created this Script!
+        sultan - Created Kernel!
+        simonpunk - Created SUSFS!
+        sidex15 - Created module!
+        backslashxx - Helped with patches!
+        幕落 - Donation!
+
+        If you have contributed and are not here please remind me!
+steps:
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Get the Latest Tag from GitHub
+      - name: Generate and Create New Tag
+run: |
+            # Fetch the latest tag from GitHub (this is the latest tag based on the GitHub API)
+            LATEST_TAG=$(gh api repos/$REPO_OWNER/$REPO_NAME/tags --jq '.[0].name')
+            if [ -z "$LATEST_TAG" ]; then
+              LATEST_TAG="v1.5.3-0"  # Default to v1.5.3-0 if no tag exists
+            fi
+
+            # Increment the suffix (e.g., v1.5.3-0 becomes v1.5.3-1)
+            NEW_TAG=$(echo "$LATEST_TAG" | awk -F- '{suffix=$2; if (!suffix) suffix=0; suffix++; printf "%s-%d", $1, suffix}')
     
-          # Define the branch names using the matrix values
-          ANYKERNEL_BRANCH="15.0.0-sultan-gs201"
-          SUSFS_BRANCH="gki-android13-5.10"
+            # Output the new tag to be used
+            echo "New tag: $NEW_TAG"
+   
+            # Set the new tag as an environment variable to be used in later steps
+            echo "NEW_TAG=${NEW_TAG}" >> $GITHUB_ENV
 
-          # Debug print the branches
-          echo "Using branch for AnyKernel3: $ANYKERNEL_BRANCH"
-          echo "Using branch for SUSFS: $SUSFS_BRANCH"
+            # Create the tag in the repository
+            git tag $NEW_TAG
+            git push origin $NEW_TAG
 
-          # Clone repositories using the branch names
-          git clone https://github.com/TheWildJames/AnyKernel3.git -b "$ANYKERNEL_BRANCH"
-          git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
-          git clone https://github.com/EduardoA3677/kernel_patches.git
-          git clone https://github.com/acuicultor/RadioactiveKernel_Pantah.git
-          mkdir -p $CONFIG/clang
-          CLANGDIR="$CONFIG/clang"
-          echo "CLANGDIR=$CLANGDIR" >> $GITHUB_ENV
-          wget -qO- https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/llvm-r522817/clang-r522817.tar.gz | tar --use-compress-program=unzstd -xv -C $CLANGDIR
-          ls -la $CLANGDIR
-          PATH=$CLANGDIR/bin:$CLANGDIR/lib:$PATH
-          echo "PATH=$PATH" >> $GITHUB_ENV
-          CC=$CLANGDIR/bin/clang
-          echo "CC=$CC" >> $GITHUB_ENV
-          LD=$CLANGDIR/bin/ld.lld
-          echo "LD=$LD" >> $GITHUB_ENV
-          AR=$CLANGDIR/bin/llvm-ar
-          echo "AR=$AR" >> $GITHUB_ENV
-          NM=$CLANGDIR/bin/llvm-nm
-          echo "NM=$NM" >> $GITHUB_ENV
-          OBJCOPY=$CLANGDIR/bin/llvm-objcopy
-          echo "OBJCOPY=$OBJCOPY" >> $GITHUB_ENV
-          OBJDUMP=$CLANGDIR/bin/llvm-objdump
-          echo "OBJDUMP=$OBJDUMP" >> $GITHUB_ENV
-          READELF=$CLANGDIR/bin/llvm-readelf
-          echo "READELF=$READELF" >> $GITHUB_ENV
-          STRIP=$CLANGDIR/bin/llvm-strip
-          echo "STRIP=$STRIP" >> $GITHUB_ENV
-          LLVM=1
-          echo "LLVM=$LLVM" >> $GITHUB_ENV
-          ARCH=arm64
-          echo "ARCH=$ARCH" >> $GITHUB_ENV
-          SUBARCH=arm64
-          echo "SUBARCH=$SUBARCH" >> $GITHUB_ENV
-
-      - name: Add KernelSU
-        run: |
-          echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG"
-          git config user.email "ealvarado26100@gmail.com"
-          git config user.name "Eduardo"
-          git revert --no-edit d2f39c14636a811c5e17e6e555bf7ff684247a9b
-
-          echo "Adding KernelSU..."
-          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -
-
-      - name: Apply SUSFS Patches
-        run: |
-          echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG"
-          
-          echo "Applying SUSFS patches..."
-          
-          # Copy SUSFS patches
-          cp ../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
-          cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android13-5.10.patch ./
-          cp ../susfs4ksu/kernel_patches/fs/* ./fs/
-          cp ../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
-
-          cd ./KernelSU-Next
-          
-          # Apply SUSFS patch for KernelSU
-          patch -p1 --forward < 10_enable_susfs_for_ksu.patch || true
-          
-          # Change to common directory and apply SUSFS patch
-          cd ..
-          patch -p1 < 50_add_susfs_in_gki-android13-5.10.patch || true
-          
-      - name: Apply Next-SUSFS Patches
-        run: |
-          echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG"
-          
-          echo "Applying next SUSFS patches..."
-          cp ../kernel_patches/apk_sign.c_fix.patch ./
-          patch -p1 -F 3 < apk_sign.c_fix.patch
-          cp ../kernel_patches/core_hook.c_fix.patch ./
-          patch -p1 --fuzz=3 < core_hook.c_fix.patch
-          cp ../kernel_patches/selinux.c_fix.patch ./
-          patch -p1 -F 3 < selinux.c_fix.patch
-
-      - name: Apply KSU Hooks
-        run: |
-          echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG"
-          # Apply additional patch
-          cp ../kernel_patches/ksu_hooks.patch ./
-          patch -p1 --fuzz=3 < ./ksu_hooks.patch
-
-      - name: Apply Hide Stuff Patches
-        run: |
-          echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG"
-          # Apply additional patch
-          cp ../kernel_patches/69_hide_stuff.patch ./
-          patch -p1 -F 3 < 69_hide_stuff.patch
-
-      - name: Apply KernelSU & SUSFS SUltan Fixes
-        run: |
-          echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG"
-          # Apply additional patch
-          cp ../kernel_patches/sys.c_fix.patch ./
-          patch -p1 --fuzz=3 < ./sys.c_fix.patch
-
-          cp ../kernel_patches/mount.h_fix.patch ./
-          patch -p1 --fuzz=3 < ./mount.h_fix.patch
-          cp ../kernel_patches/sched.h_fix.patch ./
-          patch -p1 --fuzz=3 < ./sched.h_fix.patch
-          cp ../kernel_patches/user.h_fix.patch ./
-          patch -p1 --fuzz=3 < ./user.h_fix.patch
-
-          sed -i "s/poofed_size: '%u'/poofed_size: '%llu'/g" ./fs/susfs.c
-          sed -i "s/length of string: %u/length of string: %lu/g" ./fs/susfs.c
-
-      - name: Add SUSFS Configuration Settings
-        run: |
-          echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG"
-          
-          echo "Adding configuration settings to radioactive_defconfig..."
-          
-          # Add SUSFS configuration settings
-          echo "CONFIG_KSU=y" >> ./arch/arm64/configs/radioactive_defconfig
-          echo "CONFIG_KSU_SUSFS=y" >> ./arch/arm64/configs/radioactive_defconfig
-          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./arch/arm64/configs/radioactive_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./arch/arm64/configs/radioactive_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> ./arch/arm64/configs/radioactive_defconfig
-          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ./arch/arm64/configs/radioactive_defconfig
-          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./arch/arm64/configs/radioactive_defconfig
-          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ./arch/arm64/configs/radioactive_defconfig
-          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./arch/arm64/configs/radioactive_defconfig
-          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./arch/arm64/configs/radioactive_defconfig
-          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./arch/arm64/configs/radioactive_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/radioactive_defconfig
-          
-          # Add additional tmpfs config setting
-          echo "CONFIG_TMPFS_XATTR=y" >> ./arch/arm64/configs/radioactive_defconfig
-
-      - name: Run sed and perl Commands
-        run: |
-          echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG"
-          
-          echo "Running sed commands..."
-          sed -i 's/CONFIG_LOCALVERSION="-Radioctive"/CONFIG_LOCALVERSION="-Sultan-Wild+"/' ./arch/arm64/configs/radioactive_defconfig
-
-      - name: Build the Kernel
-        run: |
-          echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG"
-          
-          echo "Building the kernel..."
-          make CC=clang LD=ld.lld ARCH=arm64 radioactive_defconfig -j$(nproc --all)
-          make CC=clang LD=ld.lld ARCH=arm64 -j$(nproc --all)
-
-      - name: Copy Images
-        run: |
-          echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG"
-
-          echo "Copying Image.lz4 and concatenating DTB files..."
-          cp ./out/arch/arm64/boot/Image.lz4 ../AnyKernel3/Image.lz4
-          cat ./out/arch/arm64/boot/dts/google/*.dtb > ../AnyKernel3/dtb
-          cp ./out/arch/arm64/boot/dts/google/dtbo.img ../AnyKernel3/dtbo.img
-
-      - name: Create ZIP Files for Different Formats
-        run: |
-          echo "Navigating to AnyKernel3 directory..."
-          cd ./AnyKernel3
-
-          # Zip the files in the AnyKernel3 directory with a new naming convention
-          ZIP_NAME="A15_Radioctive_KernelSU_SUSFS_GS201.zip"
-          echo "Creating zip file $ZIP_NAME..."
-          zip -r "../$ZIP_NAME" ./*
-          
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
+      # Download Artifacts for A12 (Only if A12 Build is successful or input is true or empty)
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
         with:
-          name: kernel-gs201
-          path: |
-            *.zip
+          path: ./downloaded-artifacts
+
+      # Create GitHub Release and upload files if make_release is true
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ env.NEW_TAG }}  # Use the generated tag for the release
+          prerelease: true  # Mark the release as a pre-release
+          release_name: ${{ env.RELEASE_NAME }}  # Pass the RELEASE_NAME to the action
+          body: ${{ env.RELEASE_NOTES }}  # Pass the RELEASE_NOTES to the action
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Assets Dynamically
+run: |
+          # Loop through all files in the downloaded-artifacts directory
+          for file in ./downloaded-artifacts/kernel-*/*; do
+              # Skip directories
+              if [ -d "$file" ]; then
+                  continue
+              fi
+
+              # Upload the file to the GitHub release
+              echo "Uploading $file..."
+              gh release upload ${{ env.NEW_TAG }} "$file"
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_TAG: ${{ env.NEW_TAG }}
+
+
+      # Display Files Uploaded
+      - name: Display Files Uploaded
+run: |
+          echo "GitHub release created with the following files:"
+          ls ./downloaded-artifacts/**/*
