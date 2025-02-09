@@ -200,7 +200,7 @@ jobs:
           cd "$CONFIG"
           
           echo "Building the kernel..."
-          make ARCH=arm64 radioactive_defconfig -j$(nproc --all)
+          make ARCH=arm64 LC=ALL radioactive_defconfig -j$(nproc --all)
           make ARCH=arm64 -j$(nproc --all) \                 
                 CC="clang" \
                 LD=ld.lld \
