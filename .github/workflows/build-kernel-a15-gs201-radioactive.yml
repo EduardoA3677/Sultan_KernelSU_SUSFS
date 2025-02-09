@@ -229,8 +229,7 @@ jobs:
                OBJCOPY=llvm-objcopy \
                OBJDUMP=llvm-objdump \
                STRIP=llvm-strip \
-               V=1 \
-
+               
       - name: Copy Images
         run: |
           echo "Changing to configuration directory: $CONFIG..."
