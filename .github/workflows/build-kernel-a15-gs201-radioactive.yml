@@ -181,10 +181,20 @@ jobs:
           if [ $? -ne 0 ]; then echo "Error: Fallo al descargar Clang"; exit 1; fi
           tar -xzf clang-r530567.tar.gz -C "$CLANGDIR"
           ls -la "$CLANGDIR"
+          git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/ \
+            --depth=1 -b android-13.0.0_r0.52 gcc64
+          echo "GCC64=$PWD/gcc64" >> $GITHUB_ENV
+          export GCC64=$PWD/gcc64
+          ls -la "$GCC64"
+          git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/ \
+            --depth=1 -b android-13.0.0_r0.52 gcc32
+          echo "GCC32=$PWD/gcc32" >> $GITHUB_ENV
+          export GCC32=$PWD/gcc32
           echo "CLANG=$PWD/clang" >> $GITHUB_ENV
           export CLANG=$PWD/clang
-          echo "PATH=$PWD/clang/bin:$PWD/clang/lib:$PATH" >> $GITHUB_ENV
-          export PATH=$PWD/clang/bin:$PWD/clang/lib:$PATH
+          ls -la "$GCC32"
+          echo "PATH=$PWD/clang/bin:$PWD/clang/lib:$PWD/gcc64/bin:$PWD/gcc32/bin:$PATH" >> $GITHUB_ENV
+          export PATH=$PWD/clang/bin:$PWD/clang/lib:$PWD/gcc64/bin/$PWD/gcc32/bin:$PATH
           echo "CC=$PWD/clang/bin/clang" >> $GITHUB_ENV
           echo "LD=$PWD/clang/bin/ld.lld" >> $GITHUB_ENV
           echo "AR=$PWD/clang/bin/llvm-ar" >> $GITHUB_ENV
