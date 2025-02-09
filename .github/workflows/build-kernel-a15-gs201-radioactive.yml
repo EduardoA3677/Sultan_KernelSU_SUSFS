@@ -21,8 +21,9 @@ jobs:
 
       - name: Installing dependencies
         run: |
-          sudo apt install -y git software-properties-common wget gnupg lsb-release flex bison
+          sudo apt install -y gitsoftware-properties-common wget gnupg lsb-release flex bison
           sudo apt update
+          sudo apt autoremove -y clang llvm llvm-19 llvm-19-dev libllvm19 llvm-19-tools clang-19 libclang-common-19-dev libclang-19-dev libmlir-19 libmlir-19-dev
 
       - name: Set CONFIG Environment Variable
         run: |
@@ -212,7 +213,7 @@ jobs:
           echo "Using linker: $(which ld.lld)"
           echo "Clang version: $(clang --version)"
           echo "LD version: $(ld.lld --version)"
-          
+
           echo "Building the kernel..."
           make  O=out radioactive_defconfig
 
@@ -220,9 +221,16 @@ jobs:
                 O=out \
                 ARCH=arm64 \
                 SUBARCH=arm64 \
-                CC=clang \
+                CC="clang" \
                 LD=ld.lld \
-                LLVM=1
+                AS=llvm-as \
+                AR=llvm-ar \
+                NM=llvm-nm \
+                OBJCOPY=llvm-objcopy \
+                OBJDUMP=llvm-objdump \
+                STRIP=llvm-strip \
+                LLVM=1 \
+                LLVM_IAS=1 \
 
                
       - name: Copy Images
