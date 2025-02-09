@@ -195,6 +195,10 @@ jobs:
           ls -la "$GCC32"
           echo "PATH=$PWD/clang/bin:$PWD/clang/lib:$PWD/gcc64/bin:$PWD/gcc32/bin:$PATH" >> $GITHUB_ENV
           export PATH=$PWD/clang/bin:$PWD/clang/lib:$PWD/gcc64/bin/$PWD/gcc32/bin:$PATH
+          echo "CROSS_COMPILE=$PWD/gcc64/bin/aarch64-linux-android-" >> $GITHUB_ENV
+          echo "CLANG_TRIPLE=$PWD/gcc64/bin/aarch64-linux-gnu-" >> $GITHUB_ENV
+          export CROSS_COMPILE=$PWD/gcc64/bin/aarch64-linux-android-
+          export CLANG_TRIPLE=$PWD/gcc64/bin/aarch64-linux-gnu-
           echo "CC=$PWD/clang/bin/clang" >> $GITHUB_ENV
           echo "LD=$PWD/clang/bin/ld.lld" >> $GITHUB_ENV
           echo "AR=$PWD/clang/bin/llvm-ar" >> $GITHUB_ENV
@@ -236,6 +240,8 @@ jobs:
                 NM=llvm-nm \
                 OBJCOPY=llvm-objcopy \
                 OBJDUMP=llvm-objdump \
+                CROSS_COMPILE=aarch64-linux-android- \
+                CLANG_TRIPLE=aarch64-linux-gnu- \
                 STRIP=llvm-strip \
                 LLVM=1 \
                 LLVM_IAS=1 \
