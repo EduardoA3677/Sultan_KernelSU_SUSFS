@@ -1,4 +1,3 @@
-
 name: Build A15 GS201 Kernel
 
 on:
@@ -24,7 +23,7 @@ jobs:
         run: |
           sudo apt install -y git wget gcc-aarch64-linux-gnu llvm clang lld
           sudo apt-get install -y llvm-19 llvm-19-dev libllvm19 llvm-19-tools clang-19 libclang-common-19-dev libclang-19-dev libmlir-19 libmlir-19-dev
-          
+
       - name: Set CONFIG Environment Variable
         run: |
           CONFIG="RadioactiveKernel_Pantah"
@@ -54,7 +53,9 @@ jobs:
           mkdir -p $CONFIG/clang
           CLANGDIR="$CONFIG/clang"
           echo "CLANGDIR=$CLANGDIR" >> $GITHUB_ENV
-          wget -qO- https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/llvm-r522817/clang-r522817.tar.gz | tar --use-compress-program=unzstd -xv -C $CLANGDIR
+          wget -O clang-r530567.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/llvm-r530567/clang-r530567.tar.gz
+          if [ $? -ne 0 ]; then echo "Error: Fallo al descargar Clang"; exit 1; fi
+          tar -xzf clang-r530567.tar.gz -C $CLANGDIR
           ls -la $CLANGDIR
           PATH=$CLANGDIR/bin:$CLANGDIR/lib:$PATH
           echo "PATH=$PATH" >> $GITHUB_ENV
