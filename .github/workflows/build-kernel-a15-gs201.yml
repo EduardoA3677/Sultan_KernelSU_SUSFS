@@ -21,8 +21,11 @@ jobs:
 
       - name: Installing dependencies
         run: |
-          sudo apt install -y git gcc-aarch64-linux-gnu
-
+          sudo apt install -y git wget gcc-aarch64-linux-gnu
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 19
+          
       - name: Set CONFIG Environment Variable
         run: |
           CONFIG="RadioactiveKernel_Pantah"
