@@ -55,33 +55,6 @@ jobs:
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
           git clone https://github.com/EduardoA3677/kernel_patches.git
           git clone https://github.com/acuicultor/RadioactiveKernel_Pantah.git
-          mkdir -p $CONFIG/clang
-          CLANGDIR="$CONFIG/clang"
-          echo "CLANGDIR=$CLANGDIR" >> $GITHUB_ENV
-          wget -O LLVM-19.1.7-Linux-X64.tar.xz https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz
-          if [ $? -ne 0 ]; then echo "Error: Fallo al descargar Clang"; exit 1; fi
-          tar -xJf LLVM-19.1.7-Linux-X64.tar.xz -C $CLANGDIR
-          ls -la $CLANGDIR
-          PATH=$CLANGDIR/bin:$CLANGDIR/lib:$PATH
-          echo "PATH=$PATH" >> $GITHUB_ENV
-          CC=$CLANGDIR/bin/clang
-          echo "CC=$CC" >> $GITHUB_ENV
-          LD=$CLANGDIR/bin/ld.lld
-          echo "LD=$LD" >> $GITHUB_ENV
-          AR=$CLANGDIR/bin/llvm-ar
-          echo "AR=$AR" >> $GITHUB_ENV
-          AS=$CLANGDIR/bin/llvm-as
-          echo "AS=$AS" >> $GITHUB_ENV
-          NM=$CLANGDIR/bin/llvm-nm
-          echo "NM=$NM" >> $GITHUB_ENV
-          OBJCOPY=$CLANGDIR/bin/llvm-objcopy
-          echo "OBJCOPY=$OBJCOPY" >> $GITHUB_ENV
-          OBJDUMP=$CLANGDIR/bin/llvm-objdump
-          echo "OBJDUMP=$OBJDUMP" >> $GITHUB_ENV
-          READELF=$CLANGDIR/bin/llvm-readelf
-          echo "READELF=$READELF" >> $GITHUB_ENV
-          STRIP=$CLANGDIR/bin/llvm-strip
-          echo "STRIP=$STRIP" >> $GITHUB_ENV
           LLVM=1
           echo "LLVM=$LLVM" >> $GITHUB_ENV
           ARCH=arm64
