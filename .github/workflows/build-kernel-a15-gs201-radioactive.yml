@@ -51,32 +51,6 @@ jobs:
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
           git clone https://github.com/EduardoA3677/kernel_patches.git
           git clone https://github.com/acuicultor/RadioactiveKernel_Pantah.git
-          mkdir -p $CONFIG/clang
-          CLANGDIR="$CONFIG/clang"
-          echo "CLANGDIR=$CLANGDIR" >> $GITHUB_ENV
-          wget -O LLVM-19.1.7-Linux-X64.tar.xz https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz
-          if [ $? -ne 0 ]; then echo "Error: Fallo al descargar Clang"; exit 1; fi
-          tar -xJf LLVM-19.1.7-Linux-X64.tar.xz -C $CLANGDIR
-          ls -la $CLANGDIR
-          PATH=$CLANGDIR/bin:$PATH
-          echo "PATH=$PATH" >> $GITHUB_ENV
-          CC=$CLANGDIR/bin/clang
-          echo "CC=$CC" >> $GITHUB_ENV
-          LD=$CLANGDIR/bin/ld.lld
-          echo "LD=$LD" >> $GITHUB_ENV
-          LLVM=1
-          echo "LLVM=$LLVM" >> $GITHUB_ENV
-          ARCH=arm64
-          echo "ARCH=$ARCH" >> $GITHUB_ENV
-          SUBARCH=arm64
-          echo "SUBARCH=$SUBARCH" >> $GITHUB_ENV
-         
-      - name: Verify Compiler
-        run: |
-          echo "Using compiler: $(which clang)"
-          echo "Using linker: $(which ld.lld)"
-          echo "Clang version: $(clang --version)"
-          echo "LD version: $(ld.lld --version)"
   
       - name: Add KernelSU
         run: |
@@ -235,7 +209,11 @@ jobs:
           export LLVM=1
           export ARCH=arm64
           export SUBARCH=arm64
-
+          echo "Using compiler: $(which clang)"
+          echo "Using linker: $(which ld.lld)"
+          echo "Clang version: $(clang --version)"
+          echo "LD version: $(ld.lld --version)"
+          
           echo "Building the kernel..."
           make  O=out radioactive_defconfig
 
