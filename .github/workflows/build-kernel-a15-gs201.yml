@@ -22,7 +22,7 @@ jobs:
 
       - name: Installing dependencies
         run: |
-          sudo apt install -y git wget gcc-aarch64-linux-gnu
+          sudo apt install -y git wget gcc-aarch64-linux-gnu llvm clang lld
           sudo apt-get install -y llvm-19 llvm-19-dev libllvm19 llvm-19-tools clang-19 libclang-common-19-dev libclang-19-dev libmlir-19 libmlir-19-dev
           
       - name: Set CONFIG Environment Variable
@@ -56,26 +56,30 @@ jobs:
           echo "CLANGDIR=$CLANGDIR" >> $GITHUB_ENV
           wget -qO- https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/llvm-r522817/clang-r522817.tar.gz | tar --use-compress-program=unzstd -xv -C $CLANGDIR
           ls -la $CLANGDIR
-          echo "CONFIG_THINLTO=y" >> $GITHUB_ENV
-          echo "CONFIG_UNIFIEDLTO=y" >> $GITHUB_ENV
-          echo "CONFIG_LLVM_MLGO_REGISTER=y" >> $GITHUB_ENV
-          echo "CONFIG_LLVM_POLLY=y" >> $GITHUB_ENV
-          echo "CONFIG_LLVM_DFA_JUMP_THREAD=y" >> $GITHUB_ENV
-          echo "PATH=$CLANGDIR/bin:$CLANGDIR/lib:$PATH" >> $GITHUB_ENV
-          echo "CC=$CLANGDIR/bin/clang" >> $GITHUB_ENV
-          echo "REAL_CC=$CLANGDIR/bin/clang" >> $GITHUB_ENV
-          echo "LD=$CLANGDIR/bin/ld.lld" >> $GITHUB_ENV
-          echo "AR=$CLANGDIR/bin/llvm-ar" >> $GITHUB_ENV
-          echo "NM=$CLANGDIR/bin/llvm-nm" >> $GITHUB_ENV
-          echo "OBJCOPY=$CLANGDIR/bin/llvm-objcopy" >> $GITHUB_ENV
-          echo "OBJDUMP=$CLANGDIR/bin/llvm-objdump" >> $GITHUB_ENV
-          echo "READELF=$CLANGDIR/bin/llvm-readelf" >> $GITHUB_ENV
-          echo "STRIP=$CLANGDIR/bin/llvm-strip" >> $GITHUB_ENV
-          echo "LLVM=1" >> $GITHUB_ENV
-          echo "LC=ALl" >> $GITHUB_ENV
-          echo "KALLSYMS_EXTRA_PASS=1" >> $GITHUB_ENV
-          echo "ARCH=arm64" >> $GITHUB_ENV
-          echo "SUBARCH=arm64" >> $GITHUB_ENV
+          PATH=$CLANGDIR/bin:$CLANGDIR/lib:$PATH
+          echo "PATH=$PATH" >> $GITHUB_ENV
+          CC=$CLANGDIR/bin/clang
+          echo "CC=$CC" >> $GITHUB_ENV
+          LD=$CLANGDIR/bin/ld.lld
+          echo "LD=$LD" >> $GITHUB_ENV
+          AR=$CLANGDIR/bin/llvm-ar
+          echo "AR=$AR" >> $GITHUB_ENV
+          NM=$CLANGDIR/bin/llvm-nm
+          echo "NM=$NM" >> $GITHUB_ENV
+          OBJCOPY=$CLANGDIR/bin/llvm-objcopy
+          echo "OBJCOPY=$OBJCOPY" >> $GITHUB_ENV
+          OBJDUMP=$CLANGDIR/bin/llvm-objdump
+          echo "OBJDUMP=$OBJDUMP" >> $GITHUB_ENV
+          READELF=$CLANGDIR/bin/llvm-readelf
+          echo "READELF=$READELF" >> $GITHUB_ENV
+          STRIP=$CLANGDIR/bin/llvm-strip
+          echo "STRIP=$STRIP" >> $GITHUB_ENV
+          LLVM=1
+          echo "LLVM=$LLVM" >> $GITHUB_ENV
+          ARCH=arm64
+          echo "ARCH=$ARCH" >> $GITHUB_ENV
+          SUBARCH=arm64
+          echo "SUBARCH=$SUBARCH" >> $GITHUB_ENV
 
       - name: Add KernelSU
         run: |
@@ -200,19 +204,8 @@ jobs:
           cd "$CONFIG"
           
           echo "Building the kernel..."
-          make ARCH=arm64 LC=ALL radioactive_defconfig -j$(nproc --all)
-          make ARCH=arm64 -j$(nproc --all) \                 
-                CC="clang" \
-                LD=ld.lld \
-                AS=llvm-as \
-                AR=llvm-ar \
-                NM=llvm-nm \
-                OBJCOPY=llvm-objcopy \
-                OBJDUMP=llvm-objdump \
-                STRIP=llvm-strip \
-                LC=ALL \
-                LLVM=1 \
-                LLVM_IAS=1 \
+          make CC=clang LD=ld.lld ARCH=arm64 radioactive_defconfig -j$(nproc --all)
+          make CC=clang LD=ld.lld ARCH=arm64 -j$(nproc --all)
 
       - name: Copy Images
         run: |
