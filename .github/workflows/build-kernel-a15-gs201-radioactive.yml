@@ -21,10 +21,10 @@ jobs:
 
       - name: Installing dependencies
         run: |
-          sudo apt install -y git gcc-aarch64-linux-gnu software-properties-common wget gnupg lsb-release
+          sudo apt install -y git gcc-aarch64-linux-gnu software-properties-common wget gnupg lsb-release flex bison
           sudo apt update
-          sudo apt install -y llvm-19 llvm-19-dev libllvm19 llvm-19-tools clang-19 libclang-common-19-dev libclang-19-dev libmlir-19 libmlir-19-dev
-          
+          sudo apt install -y llvm-19 llvm-19-dev libllvm19 llvm-19-tools clang-19 libclang-common-19-dev libclang-19-dev libmlir-19 libmlir-19-dev lld
+  
       - name: Set CONFIG Environment Variable
         run: |
           CONFIG="RadioactiveKernel_Pantah"
@@ -73,10 +73,11 @@ jobs:
          
       - name: Verify Compiler
         run: |
-            echo "Using compiler: $(which clang)"
-            echo "Using linker: $(which ld.lld)"
-        
-
+          echo "Using compiler: $(which clang)"
+          echo "Using linker: $(which ld.lld)"
+          echo "Clang version: $(clang --version)"
+          echo "LD version: $(ld.lld --version)"
+  
       - name: Add KernelSU
         run: |
           echo "Changing to configuration directory: $CONFIG..."
