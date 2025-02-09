@@ -5,7 +5,7 @@ on:
   
 jobs:
   build-kernel-a15-gs201-kernelsu-susfs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Maximize build space
@@ -21,7 +21,12 @@ jobs:
 
       - name: Installing dependencies
         run: |
-          sudo apt install -y git wget gcc-aarch64-linux-gnu
+          sudo apt install -y git wget gcc-aarch64-linux-gnu software-properties-common wget gnupg lsb-release
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /usr/share/keyrings/llvm-keyring.gpg >/dev/null
+          echo "deb [signed-by=/usr/share/keyrings/llvm-keyring.gpg] http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main" | sudo tee /etc/apt/sources.list.d/llvm.list
+          sudo apt-add-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main"
+          sudo apt update
+          sudo apt install -y llvm-19 llvm-19-dev libllvm19 llvm-19-tools clang-19 libclang-common-19-dev libclang-19-dev libmlir-19 libmlir-19-dev
           
       - name: Set CONFIG Environment Variable
         run: |
