@@ -221,8 +221,8 @@ jobs:
                 O=out \
                 ARCH=arm64 \
                 SUBARCH=arm64 \
-                CC=$CLANGDIR/bin/clang \
-                LD=$CLANGDIR/bin/ld.lld \
+                CC=clang \
+                LD=ld.lld \
                 LLVM=1
 
                
