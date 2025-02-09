@@ -211,17 +211,10 @@ jobs:
           cd "$CONFIG"
           
           echo "Building the kernel..."
-          make -j$(nproc --all) \
-                ARCH=arm64 \
-                SUBARCH=arm64 \
-                CC=clang \
-                LD=ld.lld \
-                CROSS_COMPILE=aarch64-linux-gnu- \
-                CLANG_TRIPLE=aarch64-linux-gnu- \
-                V=1 \
-                radioactive_defconfig
+          make  O=out radioactive_defconfig
 
           make -j$(nproc --all) \
+               O=out \
                ARCH=arm64 \
                SUBARCH=arm64 \
                CC=clang \
