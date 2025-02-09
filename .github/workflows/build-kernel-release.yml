@@ -31,7 +31,7 @@ on:
 jobs:
   build-kernel-a15-gs201-radioactive:
     if: ${{ inputs.build_gs201-radioactive }}
-    uses: ./.github/workflows/build-kernel-a15-gs201-radioctive.yml
+    uses: ./.github/workflows/build-kernel-a15-gs201-radioactive.yml
     secrets: inherit
   build-kernel-a15-gs201-bluspark:
     if: ${{ inputs.build_gs201-bluespark }}
