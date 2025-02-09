@@ -177,33 +177,33 @@ jobs:
           echo "CLANGDIR=$PWD/clang" >> $GITHUB_ENV
           export CLANGDIR=$PWD/clang
           mkdir -p "$CLANGDIR"
-          wget -q -O LLVM-19.1.7-Linux-X64.tar.xz https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz
+          wget -q -O clang-r530567.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/llvm-r530567/clang-r530567.tar.gz
           if [ $? -ne 0 ]; then echo "Error: Fallo al descargar Clang"; exit 1; fi
-          tar -xJf LLVM-19.1.7-Linux-X64.tar.xz -C "$CLANGDIR"
-          ls -la "$CLANGDIR/LLVM-19.1.7-Linux-X64"
-          echo "CLANG=$PWD/clang/LLVM-19.1.7-Linux-X64" >> $GITHUB_ENV
-          export CLANG=$PWD/clang/LLVM-19.1.7-Linux-X64
-          echo "PATH=$PWD/clang/LLVM-19.1.7-Linux-X64/bin:$PWD/clang/LLVM-19.1.7-Linux-X64/lib:$PATH" >> $GITHUB_ENV
-          export PATH=$PWD/clang/LLVM-19.1.7-Linux-X64/bin:$PWD/clang/LLVM-19.1.7-Linux-X64/lib:$PATH
-          echo "CC=$PWD/clang/LLVM-19.1.7-Linux-X64/bin/clang" >> $GITHUB_ENV
-          echo "LD=$PWD/clang/LLVM-19.1.7-Linux-X64/bin/ld.lld" >> $GITHUB_ENV
-          echo "AR=$PWD/clang/LLVM-19.1.7-Linux-X64/bin/llvm-ar" >> $GITHUB_ENV
-          echo "AS=$PWD/clang/LLVM-19.1.7-Linux-X64/bin/llvm-as" >> $GITHUB_ENV
-          echo "NM=$PWD/clang/LLVM-19.1.7-Linux-X64/bin/llvm-nm" >> $GITHUB_ENV
-          echo "OBJDUMP=$PWD/clang/LLVM-19.1.7-Linux-X64/bin/llvm-objdump" >> $GITHUB_ENV
-          echo "OBJCOPY=$PWD/clang/LLVM-19.1.7-Linux-X64/bin/llvm-objcopy" >> $GITHUB_ENV
-          echo "STRIP=$PWD/clang/LLVM-19.1.7-Linux-X64/bin/llvm-strip" >> $GITHUB_ENV
+          tar -xzf clang-r530567.tar.gz -C "$CLANGDIR"
+          ls -la "$CLANGDIR"
+          echo "CLANG=$PWD/clang" >> $GITHUB_ENV
+          export CLANG=$PWD/clang
+          echo "PATH=$PWD/clang/bin:$PWD/clang/lib:$PATH" >> $GITHUB_ENV
+          export PATH=$PWD/clang/bin:$PWD/clang/lib:$PATH
+          echo "CC=$PWD/clang/bin/clang" >> $GITHUB_ENV
+          echo "LD=$PWD/clang/bin/ld.lld" >> $GITHUB_ENV
+          echo "AR=$PWD/clang/bin/llvm-ar" >> $GITHUB_ENV
+          echo "AS=$PWD/clang/bin/llvm-as" >> $GITHUB_ENV
+          echo "NM=$PWD/clang/bin/llvm-nm" >> $GITHUB_ENV
+          echo "OBJDUMP=$PWD/clang/bin/llvm-objdump" >> $GITHUB_ENV
+          echo "OBJCOPY=$PWD/clang/bin/llvm-objcopy" >> $GITHUB_ENV
+          echo "STRIP=$PWD/clang/bin/llvm-strip" >> $GITHUB_ENV
           echo "LLVM=1" >> $GITHUB_ENV
           echo "ARCH=arm64" >> $GITHUB_ENV
           echo "SUBARCH=arm64" >> $GITHUB_ENV
-          export CC=$PWD/clang/LLVM-19.1.7-Linux-X64/bin/clang
-          export LD=$PWD/clang/LLVM-19.1.7-Linux-X64/bin/ld.lld
-          export AR=$PWD/clang/LLVM-19.1.7-Linux-X64/bin/llvm-ar
-          export AS=$PWD/clang/LLVM-19.1.7-Linux-X64/bin/llvm-as
-          export NM=$PWD/clang/LLVM-19.1.7-Linux-X64/bin/llvm-nm
-          export OBJDUMP=$PWD/clang/LLVM-19.1.7-Linux-X64/bin/llvm-objdump
-          export OBJCOPY=$PWD/clang/LLVM-19.1.7-Linux-X64/bin/llvm-objcopy
-          export STRIP=$PWD/clang/LLVM-19.1.7-Linux-X64/bin/llvm-strip
+          export CC=$PWD/clang/bin/clang
+          export LD=$PWD/clang/bin/ld.lld
+          export AR=$PWD/clang/bin/llvm-ar
+          export AS=$PWD/clang/bin/llvm-as
+          export NM=$PWD/clang/bin/llvm-nm
+          export OBJDUMP=$PWD/clang/bin/llvm-objdump
+          export OBJCOPY=$PWD/clang/bin/llvm-objcopy
+          export STRIP=$PWD/clang/bin/llvm-strip
           export LLVM=1
           export ARCH=arm64
           export SUBARCH=arm64
@@ -228,7 +228,7 @@ jobs:
                 OBJDUMP=llvm-objdump \
                 STRIP=llvm-strip \
                 LLVM=1 \
-                
+                LLVM_IAS=1 \
 
                
       - name: Copy Images
