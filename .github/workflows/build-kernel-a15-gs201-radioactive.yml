@@ -21,10 +21,10 @@ jobs:
 
       - name: Installing dependencies
         run: |
-          sudo apt install -y git gcc-aarch64-linux-gnu software-properties-common wget gnupg lsb-release flex bison
+          sudo apt install -y gitsoftware-properties-common wget gnupg lsb-release flex bison
           sudo apt update
-          sudo apt install -y llvm-19 llvm-19-dev libllvm19 llvm-19-tools clang-19 libclang-common-19-dev libclang-19-dev libmlir-19 libmlir-19-dev lld
-  
+          sudo apt install -y llvm-19 llvm-19-dev libllvm19 llvm-19-tools clang-19 libclang-common-19-dev libclang-19-dev libmlir-19 libmlir-19-dev
+
       - name: Set CONFIG Environment Variable
         run: |
           CONFIG="RadioactiveKernel_Pantah"
@@ -58,7 +58,7 @@ jobs:
           if [ $? -ne 0 ]; then echo "Error: Fallo al descargar Clang"; exit 1; fi
           tar -xJf LLVM-19.1.7-Linux-X64.tar.xz -C $CLANGDIR
           ls -la $CLANGDIR
-          PATH=$CLANGDIR/bin:$CLANGDIR/lib:$PATH
+          PATH=$CLANGDIR/bin:$PATH
           echo "PATH=$PATH" >> $GITHUB_ENV
           CC=$CLANGDIR/bin/clang
           echo "CC=$CC" >> $GITHUB_ENV
@@ -199,7 +199,43 @@ jobs:
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
-          
+          echo $(pwd)
+          echo "CLANGDIR=$PWD/clang" >> $GITHUB_ENV
+          export CLANGDIR=$PWD/clang
+          mkdir -p "$CLANGDIR"
+          wget -O LLVM-19.1.7-Linux-X64.tar.xz https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz
+          if [ $? -ne 0 ]; then echo "Error: Fallo al descargar Clang"; exit 1; fi
+          tar -xJf LLVM-19.1.7-Linux-X64.tar.xz -C "$CLANGDIR"
+          ls -la "$CLANGDIR/LLVM-19.1.7-Linux-X64"
+          echo "CLANG=$PWD/clang/LLVM-19.1.7-Linux-X64" >> $GITHUB_ENV
+          export CLANG=$PWD/clang/LLVM-19.1.7-Linux-X64
+          echo "PATH=$PWD/clang/LLVM-19.1.7-Linux-X64/bin:$PATH" >> $GITHUB_ENV
+          export PATH=$PWD/clang/LLVM-19.1.7-Linux-X64/bin:$PATH
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "LD=ld.lld" >> $GITHUB_ENV
+          echo "AR=llvm-ar" >> $GITHUB_ENV
+          echo "AS=llvm-as" >> $GITHUB_ENV
+          echo "NM=llvm-nm" >> $GITHUB_ENV
+          echo "OBJDUMP=llvm-objdump" >> $GITHUB_ENV
+          echo "OBJCOPY=llvm-objcopy" >> $GITHUB_ENV
+          echo "CROSS_COMPILE=aarch64-linux-gnu-" >> $GITHUB_ENV
+          echo "CLANG_TRIPLE=aarch64-linux-gnu-" >> $GITHUB_ENV
+          echo "LLVM=1" >> $GITHUB_ENV
+          echo "ARCH=arm64" >> $GITHUB_ENV
+          echo "SUBARCH=arm64" >> $GITHUB_ENV
+          export CC=clang
+          export LD=ld.lld
+          export AR=llvm-ar
+          export AS=llvm-as
+          export NM=llvm-nm
+          export OBJDUMP=llvm-objdump
+          export OBJCOPY=llvm-objcopy
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CLANG_TRIPLE=aarch64-linux-gnu-
+          export LLVM=1
+          export ARCH=arm64
+          export SUBARCH=arm64
+
           echo "Building the kernel..."
           make  O=out radioactive_defconfig
 
