@@ -51,16 +51,26 @@ jobs:
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
           git clone https://github.com/EduardoA3677/kernel_patches.git
           git clone https://github.com/acuicultor/RadioactiveKernel_Pantah.git
+          mkdir -p $CONFIG/clang
+          CLANGDIR="$CONFIG/clang"
+          echo "CLANGDIR=$CLANGDIR" >> $GITHUB_ENV
+          wget -O LLVM-19.1.7-Linux-X64.tar.xz https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz
+          if [ $? -ne 0 ]; then echo "Error: Fallo al descargar Clang"; exit 1; fi
+          tar -xJf LLVM-19.1.7-Linux-X64.tar.xz -C $CLANGDIR
+          ls -la $CLANGDIR
+          PATH=$CLANGDIR/bin:$CLANGDIR/lib:$PATH
+          echo "PATH=$PATH" >> $GITHUB_ENV
+          CC=$CLANGDIR/bin/clang
+          echo "CC=$CC" >> $GITHUB_ENV
+          LD=$CLANGDIR/bin/ld.lld
+          echo "LD=$LD" >> $GITHUB_ENV
           LLVM=1
           echo "LLVM=$LLVM" >> $GITHUB_ENV
           ARCH=arm64
           echo "ARCH=$ARCH" >> $GITHUB_ENV
           SUBARCH=arm64
           echo "SUBARCH=$SUBARCH" >> $GITHUB_ENV
-          CROSS_COMPILE=aarch64-linux-gnu-
-          echo "CROSS_COMPILE=$CROSS_COMPILE" >> $GITHUB_ENV
-          CLANG_TRIPLE=aarch64-linux-gnu-
-          echo "CLANG_TRIPLE=$CLANG_TRIPLE" >> $GITHUB_ENV
+
 
       - name: Add KernelSU
         run: |
@@ -193,16 +203,7 @@ jobs:
                SUBARCH=arm64 \
                CC=clang \
                LD=ld.lld \
-               CROSS_COMPILE=aarch64-linux-gnu- \
-               CLANG_TRIPLE=aarch64-linux-gnu- \
                LLVM=1 \
-               LLVM_IAS=1 \
-               AS=llvm-as \
-               AR=llvm-ar \
-               NM=llvm-nm \
-               OBJCOPY=llvm-objcopy \
-               OBJDUMP=llvm-objdump \
-               STRIP=llvm-strip \
                
       - name: Copy Images
         run: |
