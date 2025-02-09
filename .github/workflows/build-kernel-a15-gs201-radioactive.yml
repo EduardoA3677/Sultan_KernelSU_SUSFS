@@ -177,7 +177,7 @@ jobs:
           echo "CLANGDIR=$PWD/clang" >> $GITHUB_ENV
           export CLANGDIR=$PWD/clang
           mkdir -p "$CLANGDIR"
-          wget -O LLVM-19.1.7-Linux-X64.tar.xz https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz
+          wget -q -O LLVM-19.1.7-Linux-X64.tar.xz https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz
           if [ $? -ne 0 ]; then echo "Error: Fallo al descargar Clang"; exit 1; fi
           tar -xJf LLVM-19.1.7-Linux-X64.tar.xz -C "$CLANGDIR"
           ls -la "$CLANGDIR/LLVM-19.1.7-Linux-X64"
