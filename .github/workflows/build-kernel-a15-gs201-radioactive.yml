@@ -183,8 +183,8 @@ jobs:
           ls -la "$CLANGDIR/LLVM-19.1.7-Linux-X64"
           echo "CLANG=$PWD/clang/LLVM-19.1.7-Linux-X64" >> $GITHUB_ENV
           export CLANG=$PWD/clang/LLVM-19.1.7-Linux-X64
-          echo "PATH=$PWD/clang/LLVM-19.1.7-Linux-X64/bin:$PATH" >> $GITHUB_ENV
-          export PATH=$PWD/clang/LLVM-19.1.7-Linux-X64/bin:$PATH
+          echo "PATH=$PWD/clang/LLVM-19.1.7-Linux-X64/bin:$PWD/clang/LLVM-19.1.7-Linux-X64/lib:$PATH" >> $GITHUB_ENV
+          export PATH=$PWD/clang/LLVM-19.1.7-Linux-X64/bin:$PWD/clang/LLVM-19.1.7-Linux-X64/lib:$PATH
           echo "CC=clang" >> $GITHUB_ENV
           echo "LD=ld.lld" >> $GITHUB_ENV
           echo "AR=llvm-ar" >> $GITHUB_ENV
