@@ -39,11 +39,20 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y git device-tree-compiler lz4 xz-utils zlib1g-dev openjdk-17-jdk gcc g++ python3 python-is-python3 p7zip-full android-sdk-libsparse-utils erofs-utils \
-          default-jdk git gnupg flex bison gperf build-essential zip curl libc6-dev libncurses-dev libx11-dev libreadline-dev libgl1 libgl1-mesa-dev \
+          default-jdk git gnupg flex bison gperf build-essential zip clang llvm curl libc6-dev libncurses-dev libx11-dev libreadline-dev libgl1 libgl1-mesa-dev \
           python3 make sudo gcc g++ bc grep tofrodos python3-markdown libxml2-utils xsltproc zlib1g-dev python-is-python3 libc6-dev libtinfo6 \
           make repo cpio kmod openssl libelf-dev pahole libssl-dev --fix-missing 
-          sudo apt install -y gcc-15-aarch64-linux-gnu clang llvm
           sudo apt install libarchive-tools zstd -y    
+          sudo apt install -y \
+            binutils-aarch64-linux-gnu \
+            gcc-aarch64-linux-gnu \
+            libc6-dev-arm64-cross \
+            linux-libc-dev-arm64-cross \
+            binutils-arm-none-eabi \
+            gcc-arm-none-eabi
+
+          echo "GCC_64=aarch64-linux-gnu-" >> $GITHUB_ENV
+          echo "GCC_32=arm-none-eabi-" >> $GITHUB_ENV
               
       - name: Set CONFIG Environment Variable
         run: |
@@ -90,9 +99,9 @@ jobs:
           if [ "${{ inputs.codename }}" == "zumapro" ]; then
             export KCFLAGS="-march=armv8.6-a -O3 --param=min-pagesize=0"
           fi
-          make ${{ inputs.codename }}_defconfig -j$(nproc --all)
-          make -j$(nproc --all)
-
+          make CC=clang LD=ld.lld CLANG_TRIPLE=${GCC_64} CROSS_COMPILE=${GCC_64} LLVM=1 LLVM_IAS=1 ARCH=arm64 ${{ inputs.codename }}_defconfig -j$(nproc --all)
+          make CC=clang LD=ld.lld CLANG_TRIPLE=${GCC_64} CROSS_COMPILE=${GCC_64} LLVM=1 LLVM_IAS=1 ARCH=arm64 -j$(nproc --all)
+          
       - name: Copy Images
         run: |
           echo "Changing to configuration directory: $CONFIG..."
