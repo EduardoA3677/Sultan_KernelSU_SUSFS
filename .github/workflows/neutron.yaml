@@ -1,0 +1,149 @@
+name: Neutron
+permissions:
+  contents: write
+  actions: write
+
+on:
+  workflow_call:
+    inputs:
+      codename:
+        required: true
+        type: string
+      repo:
+        required: true
+        type: string
+      android_version:
+        required: true
+        type: string
+      kernel_version:
+        required: true
+        type: string
+
+jobs:
+  build-kernel-sultan-kernelsu-susfs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 8192
+          temp-reserve-mb: 2048
+          swap-size-mb: 8192
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git device-tree-compiler lz4 xz-utils zlib1g-dev openjdk-17-jdk python3 python-is-python3 \
+          p7zip-full android-sdk-libsparse-utils erofs-utils default-jdk gnupg flex bison gperf build-essential zip curl \
+          libc6-dev libncurses-dev libx11-dev libreadline-dev libgl1 libgl1-mesa-dev bc grep tofrodos python3-markdown \
+          libxml2-utils xsltproc libtinfo6 make repo cpio kmod openssl libelf-dev pahole libssl-dev libarchive-tools zstd
+
+      - name: Set CONFIG environment variable
+        run: |
+          echo "CONFIG=${{ inputs.repo }}" >> $GITHUB_ENV
+
+      - name: Clone AnyKernel3 and Kernel Source
+        run: |
+          git clone https://github.com/TheWildJames/AnyKernel3.git -b gki-2.0
+          git clone https://github.com/EduardoA3677/${{ inputs.repo }}
+
+      - name: Setup Toolchains and Build Environment
+        run: |
+          export ARCH=arm64
+          export RDIR="$(pwd)/${{ inputs.repo }}"
+          export KBUILD_BUILD_USER="@EduardoA3677"
+          export BUILD_KERNEL_VERSION="${{ inputs.kernel_version }}"
+          mkdir -p "${HOME}/toolchains"
+
+          # Clone Neutron-Clang
+          if [ ! -d "${HOME}/toolchains/neutron-clang" ]; then
+            mkdir -p "${HOME}/toolchains/neutron-clang"
+            cd "${HOME}/toolchains/neutron-clang"
+            curl -LO "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman"
+            chmod +x antman
+            bash antman -S && bash antman --patch=glibc
+          fi
+
+          # Clone ARM GNU Toolchain
+          if [ ! -d "${HOME}/toolchains/gcc" ]; then
+            mkdir -p "${HOME}/toolchains/gcc"
+            cd "${HOME}/toolchains/gcc"
+            curl -LO "https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-x86_64-aarch64-none-linux-gnu.tar.xz"
+            tar -xf arm-gnu-toolchain-14.2.rel1-x86_64-aarch64-none-linux-gnu.tar.xz
+          fi
+
+          # Export paths
+          export BUILD_CROSS_COMPILE="${HOME}/toolchains/gcc/arm-gnu-toolchain-14.2.rel1-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-"
+          export BUILD_CC="${HOME}/toolchains/neutron-clang/bin/clang"
+          export PATH=$PATH:"${HOME}/toolchains/neutron-clang/bin"
+          export LD_LIBRARY_PATH="${HOME}/toolchains/neutron-clang/lib:$LD_LIBRARY_PATH"
+
+          # Prepare output and build dir
+          mkdir -p "${RDIR}/out"
+          mkdir -p "${RDIR}/build"
+
+      - name: Add Configuration Settings
+        run: |
+          cd "${{ env.CONFIG }}"
+          echo "CONFIG_TMPFS_XATTR=y" >> ./arch/arm64/configs/${{ inputs.codename }}_defconfig
+          echo "CONFIG_TMPFS_POSIX_ACL=y" >> ./arch/arm64/configs/${{ inputs.codename }}_defconfig
+
+      - name: Build the Kernel
+        run: |
+          cd "${{ env.CONFIG }}"
+          export RDIR=$(pwd)
+          export ARGS="
+          -C ${RDIR} \
+          O=${RDIR}/out \
+          -j$(nproc) \
+          ARCH=arm64 \
+          CROSS_COMPILE=${BUILD_CROSS_COMPILE} \
+          CC=${BUILD_CC} \
+          CLANG_TRIPLE=aarch64-linux-gnu- \
+          LLVM=1 \
+          LLVM_IAS=1 \
+          AR=${HOME}/toolchains/neutron-clang/bin/llvm-ar \
+          NM=${HOME}/toolchains/neutron-clang/bin/llvm-nm \
+          LD=${HOME}/toolchains/neutron-clang/bin/ld.lld \
+          STRIP=${HOME}/toolchains/neutron-clang/bin/llvm-strip \
+          OBJCOPY=${HOME}/toolchains/neutron-clang/bin/llvm-objcopy \
+          OBJDUMP=${HOME}/toolchains/neutron-clang/bin/llvm-objdump \
+          READELF=${HOME}/toolchains/neutron-clang/bin/llvm-readelf \
+          HOSTCC=${HOME}/toolchains/neutron-clang/bin/clang \
+          HOSTCXX=${HOME}/toolchains/neutron-clang/bin/clang++ \
+          "
+
+          make ${ARGS} ${{ inputs.codename }}_defconfig
+          make ${ARGS}
+
+      - name: Copy Images
+        run: |
+          cd "${{ env.CONFIG }}"
+          cp ./out/arch/arm64/boot/Image.lz4 ../AnyKernel3/Image.lz4
+          if [ "${{ inputs.codename }}" == "gs201" ]; then
+            cat ./out/arch/arm64/boot/dts/google/*.dtb > ../AnyKernel3/dtb
+            cp ./out/arch/arm64/boot/dts/google/dtbo.img ../AnyKernel3/dtbo.img
+          elif [ "${{ inputs.codename }}" == "zuma" ]; then
+            cat ./out/google-devices/zuma/dts/*.dtb > ../AnyKernel3/dtb
+          elif [ "${{ inputs.codename }}" == "zumapro" ]; then
+            cat ./out/google-devices/zumapro/dts/*.dtb > ../AnyKernel3/dtb
+          fi
+
+      - name: Create ZIP Files for Different Formats
+        run: |
+          cd ./AnyKernel3
+          ZIP_NAME="${{ inputs.codename }}_A15_Sultan_Next_SUSFS.zip"
+          zip -r "../$ZIP_NAME" ./*
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-${{ inputs.codename }}
+          path: |
+            *.zip
+            
