@@ -99,8 +99,8 @@ jobs:
           if [ "${{ inputs.codename }}" == "zumapro" ]; then
             export KCFLAGS="-march=armv8.6-a -O3 --param=min-pagesize=0"
           fi
-          make CC=clang LD=ld.lld CLANG_TRIPLE=${GCC_64} CROSS_COMPILE=${GCC_64} LLVM=1 LLVM_IAS=1 ARCH=arm64 ${{ inputs.codename }}_defconfig -j$(nproc --all)
-          make CC=clang LD=ld.lld CLANG_TRIPLE=${GCC_64} CROSS_COMPILE=${GCC_64} LLVM=1 LLVM_IAS=1 ARCH=arm64 -j$(nproc --all)
+          make CROSS_COMPILE=aarch64-linux-gnu- ARCH=arm64 ${{ inputs.codename }}_defconfig -j$(nproc --all)
+          make CROSS_COMPILE=aarch64-linux-gnu- ARCH=arm64 -j$(nproc --all)
           
       - name: Copy Images
         run: |
