@@ -57,6 +57,8 @@ jobs:
           
           # Debug print the branches
           echo "Using branch for AnyKernel3: $ANYKERNEL_BRANCH"
+          git clone https://github.com/TheWildJames/AnyKernel3.git -b "$ANYKERNEL_BRANCH"
+          git clone https://github.com/EduardoA3677/${{ inputs.repo }}
           
       - name: Add Configuration Settings
         run: |
