@@ -72,7 +72,7 @@ jobs:
           # Debug print the branches
           echo "Using branch for AnyKernel3: $ANYKERNEL_BRANCH"
           git clone https://github.com/TheWildJames/AnyKernel3.git -b "$ANYKERNEL_BRANCH"
-          git clone https://github.com/EduardoA3677/gs-pantah -b 15 gs201
+          git clone https://github.com/EduardoA3677/gs201 -b Kali gs201
           
       - name: Add Configuration Settings
         run: |
